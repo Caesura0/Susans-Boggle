@@ -40,6 +40,15 @@ Example Run
 <img src="example/sampleRun.png">
 <img src="example/sampleScreenshot.png">
 
+## Swipe / Draw Selection
+
+You can now select words by swiping or drawing a line across adjacent tiles with left-click or touch.
+- Start a game by clicking **Start Game**.
+- Click (or touch) a tile and drag across adjacent tiles — letters will highlight as you move.
+- Release to automatically submit the selected word if the toggle is enabled.
+
+Use the new **Auto submit on release** checkbox to turn auto-submission on or off. Manual word entry and clicking tiles still work as before.
+
 ## Areas of improvement
 
 * Error Handling

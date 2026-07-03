@@ -7,7 +7,8 @@
     "example": "example"
   },
   "scripts": {
-    "serve": "http-server -o"
+    "serve": "http-server -o",
+    "build": "node scripts/build.js"
   },
   "keywords": [],
   "author": "",
