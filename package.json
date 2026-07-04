@@ -7,13 +7,19 @@
     "example": "example"
   },
   "scripts": {
-    "serve": "http-server -o",
-    "build": "node scripts/build.js"
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "lint": "eslint js/*.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "http-server": "^0.11.1"
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.6.0",
+    "vitest": "^4.1.9"
   }
 }

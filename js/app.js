@@ -1,3 +1,6 @@
+import { loadGameAssets } from './assets.js';
+import { createGameState, getLetterCount, getPointsForWord as getWordPoints } from './game.js';
+import { Board } from './board.js';
 
 (function () {
     
@@ -30,9 +33,8 @@
         suppressClick = false,
         isAutoSubmitEnabled = true,
         svgOverlay = null,
-        polylinePoints = [],
-        highScore = 0,
-        totalPoints = 0;
+        polylinePoints = [];
+    const state = createGameState();
 
     var getStoredHighScore = function() {
         var stored = window.localStorage.getItem('boggleHighScore');
@@ -40,45 +42,20 @@
     };
 
     var setStoredHighScore = function(score) {
-        highScore = score;
+        state.highScore = score;
         window.localStorage.setItem('boggleHighScore', score);
     };
 
     var updateScoreDisplay = function() {
-        document.getElementById('points').textContent = totalPoints + ' Point(s)';
+        document.getElementById('points').textContent = state.totalPoints + ' Point(s)';
     };
 
     var updateHighScoreDisplay = function() {
-        document.getElementById('high-score').textContent = 'High Score: ' + highScore;
+        document.getElementById('high-score').textContent = 'High Score: ' + state.highScore;
     };
 
     var getPointsForWord = function(w) {
-        var len = getLetterCount(w);
-        if (len >= 8) return 11;
-        if (len === 7) return 5;
-        if (len === 6) return 3;
-        if (len === 5) return 2;
-        if (len === 4) return 1;
-        if (len === 3) return 1;
-        return 0;
-    };
-
-    var getLetterCount = function(w) {
-        if (!w) return 0;
-        var i = 0, count = 0;
-        while (i < w.length) {
-            var ch = w.charAt(i);
-            var next = (i + 1 < w.length) ? w.charAt(i + 1) : '';
-            // treat 'Qu' or 'qu' as two letters
-            if ((ch === 'Q' || ch === 'q') && (next === 'u' || next === 'U')) {
-                count += 2;
-                i += 2;
-            } else {
-                count += 1;
-                i += 1;
-            }
-        }
-        return count;
+        return getWordPoints(w, getLetterCount);
     };
 
     var shuffleArray = function(arr) {
@@ -131,25 +108,14 @@
     };
 
 
-    var readFile = function (file, conf, separator) {
-        var rawFile = new XMLHttpRequest();
-        rawFile.open("GET", file, false);
-        rawFile.onreadystatechange = function () {
-            if (rawFile.readyState === 4) {
-                if (rawFile.status === 200 || rawFile.status == 0) {
-                    // var allText = rawFile.responseText;
-                    // alert(allText);
-                    let contents = rawFile.responseText;
-                    if (contents) {
-                        if (conf === 'dict')
-                            wordsList = contents.split(separator).map(item => item.trim());
-                        if (conf === 'board')
-                            boardConf = contents.split(separator).map(item => item.trim());
-                    }
-                }
-            }
+    var loadAssets = async function () {
+        try {
+            const assets = await loadGameAssets(BOGGLE_CONFIG.BOARD_CONFIG_FILE_PATH, BOGGLE_CONFIG.DICTIONARY_FILE_PATH);
+            wordsList = assets.dictionary;
+            boardConf = assets.boardConfig;
+        } catch {
+            document.getElementById('error-msg').textContent = 'Unable to load game assets.';
         }
-        rawFile.send(null);
     };
 
     var onTileClick = function (event) {
@@ -254,10 +220,10 @@
                         wordsContainer = document.getElementById('right-list');
                         // compute points for the word and update totals
                         var pts = getPointsForWord(word);
-                        totalPoints += pts;
+                        state.totalPoints += pts;
                         updateScoreDisplay();
-                        if (totalPoints > highScore) {
-                            setStoredHighScore(totalPoints);
+                        if (state.totalPoints > state.highScore) {
+                            setStoredHighScore(state.totalPoints);
                             updateHighScoreDisplay();
                         }
                         liEl.setAttribute('title', 'Word is present in the board and in dictionary');
@@ -511,7 +477,9 @@
                     }
                     poly.setAttribute('points', polylinePoints.join(' '));
                 }
-            } catch (e) {}
+            } catch (error) {
+                console.warn(error);
+            }
         }
         document.getElementById('entered').value = word;
     };
@@ -595,11 +563,11 @@
 
         if (useRandom) {
             boardConf = generateRandomBoard();
-        } else {
-            readFile(BOGGLE_CONFIG.BOARD_CONFIG_FILE_PATH, 'board', ',');
+        } else if (!boardConf.length) {
+            boardConf = generateRandomBoard();
         }
 
-        boardObj = new board(BOGGLE_CONFIG.BOARD_WIDTH, BOGGLE_CONFIG.BOARD_HEIGHT);
+        boardObj = new Board(BOGGLE_CONFIG.BOARD_WIDTH, BOGGLE_CONFIG.BOARD_HEIGHT);
         boardObj.initilizeCanvas(boardConf);
         boardObj.render();
         bindBoardTiles();
@@ -649,17 +617,18 @@
         document.getElementById('right-list').innerHTML = '';
         document.getElementById('wrong-list').innerHTML = '';
         document.getElementById('error-msg').textContent = '';
-        totalPoints = 0;
+        state.totalPoints = 0;
         updateScoreDisplay();
-        highScore = getStoredHighScore();
+        state.highScore = getStoredHighScore();
         updateHighScoreDisplay();
         var deadline = new Date(Date.parse(new Date()) + BOGGLE_CONFIG.GAME_TIME * 1000);
         initializeClock('clockdiv', deadline);
     };
 
-    createBoard();
-    readFile(BOGGLE_CONFIG.DICTIONARY_FILE_PATH, 'dict', '\n');
-    bindEvents();
+    loadAssets().then(function () {
+        createBoard();
+        bindEvents();
+    });
 
     console.log('app loaded');
 
