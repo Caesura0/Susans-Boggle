@@ -34,8 +34,17 @@ npm install
 npm run serve
 ```
 * This will open a new browser window. If it does not you can hit the url http://127.0.0.1:8080/ or http://localhost:8080/
-* Hit ctrl+c to stop the server  
-  
+* Hit ctrl+c to stop the server
+
+### Development checks
+
+```command line
+npm run lint
+npm run build
+```
+
+These commands validate the JavaScript modules and generate a standalone build in the dist folder for testing or deployment.
+
 Example Run
 <img src="example/sampleRun.png">
 <img src="example/sampleScreenshot.png">
@@ -61,19 +70,22 @@ Use the new **Auto submit on release** checkbox to turn auto-submission on or of
 ```
 |_js
 | |_app.js
+| |_assets.js
 | |_board.js
+| |_game.js
 | |_queue.js
 |_style
-| |_style.css
+| |_styles.css
 |_index.html
 |_dictionary.txt
 |_TestBoard.txt
+|_eslint.config.js
 |_package.json
 ```
 
 
 ## Development
 
-I have mainly used ES5 to develop this application (with very little ES6 features which can be supported in all browsers i.e 'let'). However it can be migrated to ES6 with very little effort. I chose not to use ES6 because it might require additional setup for transpilation. For the interest of time I focused less on setup, more on solving the actual problem.
+The game is still intentionally lightweight, but it now uses modular JavaScript for asset loading and shared game logic while keeping the browser-based experience simple. The current workflow supports linting and standalone packaging without adding a framework.
 
 ## Thank You

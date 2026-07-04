@@ -2,22 +2,52 @@
 @import url(https://fonts.googleapis.com/css?family=Lato:400,300,700);
 
 
+.game-layout {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    max-width: 1200px;
+    margin: 1.5em auto;
+    padding: 0 1rem;
+}
+
 section.board-container {
-    margin-top: 1.5em;
-    float: left;
-    width: 60%;
+    flex: 1 1 50%;
+    min-width: 320px;
 }
 
-section.right-words-container {
-    width: 20%;
-    height: auto;
-    float: left;
-}
-
+section.right-words-container,
 section.wrong-words-container {
-    width: 20%;
-    height: auto;
-    float: left;
+    flex: 1 1 20%;
+    min-width: 200px;
+}
+
+@media (max-width: 900px) {
+    .game-layout {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    section.board-container {
+        order: -1; /* Keep board at top */
+        flex: 1 1 100%;
+    }
+
+    section.right-words-container,
+    section.wrong-words-container {
+        flex: 1 1 45%;
+        max-width: 400px;
+    }
+}
+
+@media (max-width: 500px) {
+    section.right-words-container,
+    section.wrong-words-container {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
 }
 
 div.selected {
@@ -63,6 +93,7 @@ input.word {
 }
 
 .btn-primary {
+    touch-action: manipulation;
     padding: 0.5em 1em;
     margin: .5em 0 .5em .5em;
     line-height: 24px;
@@ -84,6 +115,7 @@ input.word {
 }
 
 .btn-secondary {
+    touch-action: manipulation;
     padding: 0.5em 1em;
     margin: .5em;
     line-height: 24px;
@@ -126,13 +158,12 @@ body {
 
 .row {
     width: 100%;
-    clear: both;
+    display: flex;
+    justify-content: center;
 }
 
 .col {
     padding: .5em;
-    float: left;
-
     text-align: center;
     line-height: 3em;
     font-size: 1.5em;
@@ -167,12 +198,9 @@ ul {
     background-color: #fcfcfc;
 }
 
-.right-words-container .words {
-    margin: 2em 0 0 2.5em;
-}
-
+.right-words-container .words,
 .wrong-words-container .words {
-    margin: 2em 2.5em 0 0;
+    margin: 2em 0 0 0;
 }
 
 .words li {
