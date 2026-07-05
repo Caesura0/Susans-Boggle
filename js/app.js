@@ -4,6 +4,33 @@ import { Board } from './board.js';
 
 (function () {
     
+    var initTheme = function() {
+        var currentTheme = window.localStorage.getItem('boggleTheme') || 'dark';
+        var iconEl = document.querySelector('.theme-icon');
+        if (currentTheme === 'light') {
+            document.body.classList.add('light-theme');
+            if (iconEl) iconEl.textContent = '☀️';
+        } else {
+            document.body.classList.remove('light-theme');
+            if (iconEl) iconEl.textContent = '🌙';
+        }
+    };
+
+    var toggleTheme = function() {
+        var iconEl = document.querySelector('.theme-icon');
+        if (document.body.classList.contains('light-theme')) {
+            document.body.classList.remove('light-theme');
+            if (iconEl) iconEl.textContent = '🌙';
+            window.localStorage.setItem('boggleTheme', 'dark');
+        } else {
+            document.body.classList.add('light-theme');
+            if (iconEl) iconEl.textContent = '☀️';
+            window.localStorage.setItem('boggleTheme', 'light');
+        }
+    };
+
+    initTheme();
+    
     var BOGGLE_CONFIG = {
         BOARD_WIDTH : 4,
         BOARD_HEIGHT : 4,
@@ -303,6 +330,11 @@ import { Board } from './board.js';
         document.getElementById('add-word').onclick = onAddWordWrapper;
         document.getElementById('start-game').onclick = onStartGame;
         document.getElementById('reset-turn').onclick = resetTurn;
+        
+        var themeToggleBtn = document.getElementById('theme-toggle');
+        if (themeToggleBtn) {
+            themeToggleBtn.onclick = toggleTheme;
+        }
 
         var inputWordBox = document.getElementById("entered");
         var autoSubmitToggle = document.getElementById('auto-submit-toggle');
@@ -469,7 +501,7 @@ import { Board } from './board.js';
                     if (!poly) {
                         poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
                         poly.setAttribute('fill','none');
-                        poly.setAttribute('stroke','#4CAF50');
+                        poly.setAttribute('stroke','#a855f7');
                         poly.setAttribute('stroke-width','6');
                         poly.setAttribute('stroke-linecap','round');
                         poly.setAttribute('stroke-linejoin','round');
@@ -601,6 +633,7 @@ import { Board } from './board.js';
             if (t.total <= 0) {
                 clearInterval(timeinterval);
                 gameOver = true;
+                updateGameStateUI();
             }
         }
 
@@ -609,8 +642,22 @@ import { Board } from './board.js';
     };
 
 
+    var updateGameStateUI = function() {
+        var consoleEl = document.querySelector('.game-console');
+        var startGameBtn = document.getElementById('start-game');
+        if (gameOver) {
+            if (consoleEl) consoleEl.classList.add('game-inactive');
+            if (startGameBtn) startGameBtn.classList.add('pulse');
+        } else {
+            if (consoleEl) consoleEl.classList.remove('game-inactive');
+            if (startGameBtn) startGameBtn.classList.remove('pulse');
+        }
+    };
+
     var onStartGame = function () {
         gameOver = false;
+        updateGameStateUI();
+        createBoard(true);
         resetTurn();
         goodWords = [];
         badWords = [];
@@ -628,6 +675,7 @@ import { Board } from './board.js';
     loadAssets().then(function () {
         createBoard();
         bindEvents();
+        updateGameStateUI();
     });
 
     console.log('app loaded');
