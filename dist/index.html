@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Susan's Boggle</title>
-  <script type="module" crossorigin src="/assets/index-3LXw5zmE.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-C5RcnlTn.css">
+    <title>Susan's Boggle</title>
+  <script type="module" crossorigin src="/assets/index-DszuDhFS.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-xP7QBikg.css">
 </head>
 
 <body>
@@ -16,9 +16,17 @@
             <span>B</span><span>O</span><span>G</span><span>G</span><span>L</span><span>E</span>
         </div>
         <p class="subtitle">Word Search Challenge</p>
-        <button id="theme-toggle" class="theme-btn" aria-label="Toggle Theme">
-            <span class="theme-icon">🌙</span>
-        </button>
+        <div class="header-controls">
+            <button id="theme-toggle" class="theme-btn" aria-label="Toggle Theme">
+                <span class="theme-icon">🌙</span>
+            </button>
+            <button id="settings-btn" class="theme-btn" aria-label="Open Settings">
+                <span class="theme-icon">⚙️</span>
+            </button>
+            <button id="stats-btn" class="theme-btn" aria-label="Open Statistics">
+                <span class="theme-icon">📊</span>
+            </button>
+        </div>
     </header>
 
     <main class="game-layout">
@@ -61,8 +69,13 @@
 
             <div class="game-controls">
                 <div class="button-row">
+                    <select id="grid-size-select" class="btn-secondary select-control" aria-label="Grid Size">
+                        <option value="4">4x4 Grid</option>
+                        <option value="5">5x5 Grid</option>
+                    </select>
                     <span id='reset-turn' class='btn-secondary'>Reset</span>
                     <span id='random-board' class='btn-secondary'>Random Board</span>
+                    <span id='end-game' class='btn-primary' style="display: none; background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);">End Game</span>
                 </div>
                 <label class='toggle-label'>
                     <input id='auto-submit-toggle' type='checkbox'> Auto submit on release
@@ -82,10 +95,96 @@
                         <ul id="wrong-list"></ul>
                     </div>
                 </div>
+                <div class="word-list-box missed-words">
+                    <h3>Missed Words</h3>
+                    <div class="scroll-container">
+                        <ul id="missed-list"></ul>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
 
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>Game Settings</h2>
+                <button id="close-settings" class="close-btn" aria-label="Close Settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="game-duration">Game Duration</label>
+                    <select id="game-duration" class="btn-secondary select-control">
+                        <option value="60">60 Seconds (1 Min)</option>
+                        <option value="120">120 Seconds (2 Min)</option>
+                        <option value="180">180 Seconds (3 Min)</option>
+                        <option value="0">Zen Mode (Untimed)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="min-word-len">Minimum Word Length</label>
+                    <select id="min-word-len" class="btn-secondary select-control">
+                        <option value="auto">Auto (3 for 4x4, 4 for 5x5)</option>
+                        <option value="3">3 Letters</option>
+                        <option value="4">4 Letters</option>
+                        <option value="5">5 Letters</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings" class="btn-primary">Apply Settings</button>
+            </div>
+    </div>
+
+    <div id="stats-modal" class="modal-overlay">
+        <div class="modal-content glass-panel stats-modal-content">
+            <div class="modal-header">
+                <h2>Player Stats & Leaderboard</h2>
+                <button id="close-stats" class="close-btn" aria-label="Close Statistics">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Summary Grid -->
+                <div class="stats-summary-grid">
+                    <div class="stat-card">
+                        <span class="stat-val" id="stats-played">0</span>
+                        <span class="stat-lbl">Played</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="stats-avg">0</span>
+                        <span class="stat-lbl">Avg Score</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="stats-longest">-</span>
+                        <span class="stat-lbl">Longest Word</span>
+                    </div>
+                </div>
+                
+                <!-- Leaderboard Table -->
+                <div class="leaderboard-section">
+                    <h3>Top 5 High Scores</h3>
+                    <div class="table-container">
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Score</th>
+                                    <th>Grid</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-rows">
+                                <!-- Filled dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer stats-footer">
+                <button id="reset-stats" class="btn-secondary danger-btn">Reset Stats</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

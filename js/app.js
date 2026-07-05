@@ -1,6 +1,7 @@
 import { loadGameAssets } from './assets.js';
 import { createGameState, getLetterCount, getPointsForWord as getWordPoints } from './game.js';
 import { Board } from './board.js';
+import { solveBoard } from './solver.js';
 
 (function () {
     
@@ -29,6 +30,118 @@ import { Board } from './board.js';
         }
     };
 
+    var getMinWordLength = function() {
+        var minLen = window.localStorage.getItem('boggleMinWordLen') || 'auto';
+        if (minLen !== 'auto') {
+            return parseInt(minLen, 10);
+        }
+        return (BOGGLE_CONFIG.BOARD_WIDTH === 5) ? 4 : 3;
+    };
+
+    var loadSettings = function() {
+        var savedDuration = window.localStorage.getItem('boggleGameDuration');
+        if (savedDuration !== null) {
+            BOGGLE_CONFIG.GAME_TIME = parseInt(savedDuration, 10);
+        }
+        
+        var selectDur = document.getElementById('game-duration');
+        if (selectDur) {
+            selectDur.value = BOGGLE_CONFIG.GAME_TIME.toString();
+        }
+        
+        var selectLen = document.getElementById('min-word-len');
+        if (selectLen) {
+            selectLen.value = window.localStorage.getItem('boggleMinWordLen') || 'auto';
+        }
+    };
+
+    var loadPlayerStats = function() {
+        var defaultStats = {
+            gamesPlayed: 0,
+            totalPoints: 0,
+            longestWord: "",
+            highScores: []
+        };
+        var statsStr = window.localStorage.getItem('bogglePlayerStats');
+        if (statsStr) {
+            try {
+                return JSON.parse(statsStr);
+            } catch {
+                // Ignore parsing errors and return default stats
+                return defaultStats;
+            }
+        }
+        return defaultStats;
+    };
+
+    var savePlayerStats = function(stats) {
+        window.localStorage.setItem('bogglePlayerStats', JSON.stringify(stats));
+    };
+
+    var recordGameStats = function(score, grid) {
+        if (!boardObj || !boardObj.canvasMatrix || boardObj.canvasMatrix.length === 0) {
+            return;
+        }
+
+        var stats = loadPlayerStats();
+        
+        stats.gamesPlayed += 1;
+        stats.totalPoints += score;
+
+        var currentLongest = stats.longestWord || "";
+        goodWords.forEach(function(word) {
+            if (word.length > currentLongest.length) {
+                currentLongest = word;
+            }
+        });
+        stats.longestWord = currentLongest;
+
+        var dateStr = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' });
+        stats.highScores.push({
+            score: score,
+            grid: grid,
+            date: dateStr
+        });
+
+        stats.highScores.sort(function(a, b) {
+            return b.score - a.score;
+        });
+        stats.highScores = stats.highScores.slice(0, 5);
+
+        savePlayerStats(stats);
+    };
+
+    var renderPlayerStats = function() {
+        var stats = loadPlayerStats();
+        
+        document.getElementById('stats-played').textContent = stats.gamesPlayed;
+        
+        var avg = stats.gamesPlayed > 0 ? Math.round(stats.totalPoints / stats.gamesPlayed) : 0;
+        document.getElementById('stats-avg').textContent = avg;
+        
+        document.getElementById('stats-longest').textContent = stats.longestWord ? stats.longestWord.toUpperCase() : '-';
+
+        var rowsContainer = document.getElementById('leaderboard-rows');
+        if (rowsContainer) {
+            rowsContainer.innerHTML = '';
+            
+            for (var i = 0; i < 5; i++) {
+                var entry = stats.highScores[i];
+                var tr = document.createElement('tr');
+                
+                if (entry) {
+                    tr.innerHTML = '<td>' + (i + 1) + '</td>' +
+                                   '<td>' + entry.score + '</td>' +
+                                   '<td>' + entry.grid + '</td>' +
+                                   '<td>' + entry.date + '</td>';
+                } else {
+                    tr.innerHTML = '<td>' + (i + 1) + '</td><td>-</td><td>-</td><td>-</td>';
+                }
+                rowsContainer.appendChild(tr);
+            }
+        }
+    };
+
     initTheme();
     
     var BOGGLE_CONFIG = {
@@ -43,6 +156,13 @@ import { Board } from './board.js';
             'AOOTTW', 'CIMOTU', 'DEILRX', 'DELRVY',
             'DISTTY', 'EEGHNW', 'EEINSU', 'EHRTVW',
             'EIOSST', 'ELRTTY', 'HIMNQU', 'HLNNRZ'
+        ],
+        BOGGLE_5X5_DICE : [
+            'AAAFRS', 'AAEEEE', 'AAFIRS', 'ADENNN', 'AEEEEM',
+            'AEEGMU', 'AEGMNN', 'AFIRSY', 'BJKQXZ', 'CCNWUT',
+            'CEIILT', 'CEILPT', 'CEIPST', 'DDLNOR', 'DDHNOT',
+            'DHHLOR', 'DHLNOR', 'EIIITT', 'EMOTTT', 'ENSSSU',
+            'FIPRSY', 'GORRVW', 'HIPRRY', 'NOOTUW', 'OOOTUW'
         ]
     };
 
@@ -96,7 +216,12 @@ import { Board } from './board.js';
     };
 
     var generateRandomBoard = function() {
-        let dice = BOGGLE_CONFIG.BOGGLE_DICE.slice();
+        let dice;
+        if (BOGGLE_CONFIG.BOARD_WIDTH === 5) {
+            dice = BOGGLE_CONFIG.BOGGLE_5X5_DICE.slice();
+        } else {
+            dice = BOGGLE_CONFIG.BOGGLE_DICE.slice();
+        }
         shuffleArray(dice);
         let letters = [];
         let cellCount = BOGGLE_CONFIG.BOARD_WIDTH * BOGGLE_CONFIG.BOARD_HEIGHT;
@@ -233,6 +358,13 @@ import { Board } from './board.js';
         }
 
         word = word.toString().toLowerCase();//added toString just to safeguard beacuse we are accepting input from user
+        
+        var minLen = getMinWordLength();
+        if (word.length < minLen) {
+            document.getElementById('error-msg').textContent = 'Word must be at least ' + minLen + ' letters';
+            return;
+        }
+
         if(boardObj.find(word)) {
             document.getElementById('error-msg').textContent = 'Word found in the board';
             
@@ -352,6 +484,128 @@ import { Board } from './board.js';
                 createBoard(true);
                 resetTurn();
             }, false);
+        }
+
+        var gridSizeSelect = document.getElementById('grid-size-select');
+        if (gridSizeSelect) {
+            gridSizeSelect.addEventListener('change', function () {
+                var size = parseInt(this.value, 10);
+                BOGGLE_CONFIG.BOARD_WIDTH = size;
+                BOGGLE_CONFIG.BOARD_HEIGHT = size;
+                createBoard(true);
+                resetTurn();
+                updateGameStateUI();
+            });
+        }
+
+        var settingsBtn = document.getElementById('settings-btn');
+        var settingsModal = document.getElementById('settings-modal');
+        var closeSettingsBtn = document.getElementById('close-settings');
+        var saveSettingsBtn = document.getElementById('save-settings');
+
+        if (settingsBtn && settingsModal) {
+            settingsBtn.onclick = function() {
+                var selectDur = document.getElementById('game-duration');
+                if (selectDur) selectDur.value = BOGGLE_CONFIG.GAME_TIME.toString();
+                var selectLen = document.getElementById('min-word-len');
+                if (selectLen) selectLen.value = window.localStorage.getItem('boggleMinWordLen') || 'auto';
+                
+                settingsModal.classList.add('open');
+            };
+        }
+
+        if (closeSettingsBtn && settingsModal) {
+            closeSettingsBtn.onclick = function() {
+                settingsModal.classList.remove('open');
+            };
+        }
+
+        if (settingsModal) {
+            settingsModal.onclick = function(event) {
+                if (event.target === settingsModal) {
+                    settingsModal.classList.remove('open');
+                }
+            };
+        }
+
+        if (saveSettingsBtn && settingsModal) {
+            saveSettingsBtn.onclick = function() {
+                var selectDur = document.getElementById('game-duration');
+                var selectLen = document.getElementById('min-word-len');
+                
+                var newDuration = selectDur ? parseInt(selectDur.value, 10) : 120;
+                var newMinLen = selectLen ? selectLen.value : 'auto';
+                
+                window.localStorage.setItem('boggleGameDuration', newDuration);
+                window.localStorage.setItem('boggleMinWordLen', newMinLen);
+                
+                BOGGLE_CONFIG.GAME_TIME = newDuration;
+                
+                settingsModal.classList.remove('open');
+                
+                if (gameOver) {
+                    var deadline = new Date(Date.parse(new Date()) + BOGGLE_CONFIG.GAME_TIME * 1000);
+                    initializeClock('clockdiv', deadline);
+                    createBoard(true);
+                    updateGameStateUI();
+                } else {
+                    document.getElementById('error-msg').textContent = 'Settings saved. They will apply in the next game.';
+                }
+            };
+        }
+
+        var endGameBtn = document.getElementById('end-game');
+        if (endGameBtn) {
+            endGameBtn.onclick = function() {
+                if (!gameOver) {
+                    clearInterval(timeinterval);
+                    gameOver = true;
+                    updateGameStateUI();
+                    renderMissedWords();
+                    recordGameStats(state.totalPoints, BOGGLE_CONFIG.BOARD_WIDTH + 'x' + BOGGLE_CONFIG.BOARD_HEIGHT);
+                }
+            };
+        }
+
+        var statsBtn = document.getElementById('stats-btn');
+        var statsModal = document.getElementById('stats-modal');
+        var closeStatsBtn = document.getElementById('close-stats');
+        var resetStatsBtn = document.getElementById('reset-stats');
+
+        if (statsBtn && statsModal) {
+            statsBtn.onclick = function() {
+                renderPlayerStats();
+                statsModal.classList.add('open');
+            };
+        }
+
+        if (closeStatsBtn && statsModal) {
+            closeStatsBtn.onclick = function() {
+                statsModal.classList.remove('open');
+            };
+        }
+
+        if (statsModal) {
+            statsModal.onclick = function(event) {
+                if (event.target === statsModal) {
+                    statsModal.classList.remove('open');
+                }
+            };
+        }
+
+        if (resetStatsBtn) {
+            resetStatsBtn.onclick = function() {
+                if (window.confirm('Are you sure you want to reset all your stats and high scores?')) {
+                    var defaultStats = {
+                        gamesPlayed: 0,
+                        totalPoints: 0,
+                        longestWord: "",
+                        highScores: []
+                    };
+                    savePlayerStats(defaultStats);
+                    renderPlayerStats();
+                }
+            };
         }
 
         // pointer events for swipe/draw selection
@@ -624,6 +878,12 @@ import { Board } from './board.js';
         var minutesSpan = clock.querySelector('.minutes');
         var secondsSpan = clock.querySelector('.seconds');
 
+        if (BOGGLE_CONFIG.GAME_TIME === 0) {
+            minutesSpan.innerHTML = 'ZE';
+            secondsSpan.innerHTML = 'N';
+            return;
+        }
+
         function updateClock() {
             var t = getTimeRemaining(endtime);
 
@@ -634,6 +894,8 @@ import { Board } from './board.js';
                 clearInterval(timeinterval);
                 gameOver = true;
                 updateGameStateUI();
+                renderMissedWords();
+                recordGameStats(state.totalPoints, BOGGLE_CONFIG.BOARD_WIDTH + 'x' + BOGGLE_CONFIG.BOARD_HEIGHT);
             }
         }
 
@@ -645,9 +907,11 @@ import { Board } from './board.js';
     var updateGameStateUI = function() {
         var consoleEl = document.querySelector('.game-console');
         var startGameBtn = document.getElementById('start-game');
+        var endGameBtn = document.getElementById('end-game');
         if (gameOver) {
             if (consoleEl) consoleEl.classList.add('game-inactive');
             if (startGameBtn) startGameBtn.classList.add('pulse');
+            if (endGameBtn) endGameBtn.style.display = 'none';
         } else {
             if (consoleEl) consoleEl.classList.remove('game-inactive');
             if (startGameBtn) startGameBtn.classList.remove('pulse');
@@ -663,16 +927,51 @@ import { Board } from './board.js';
         badWords = [];
         document.getElementById('right-list').innerHTML = '';
         document.getElementById('wrong-list').innerHTML = '';
+        var missedContainer = document.getElementById('missed-list');
+        if (missedContainer) missedContainer.innerHTML = '';
         document.getElementById('error-msg').textContent = '';
         state.totalPoints = 0;
         updateScoreDisplay();
         state.highScore = getStoredHighScore();
         updateHighScoreDisplay();
+        
+        var endGameBtn = document.getElementById('end-game');
+        if (endGameBtn) {
+            endGameBtn.style.display = (BOGGLE_CONFIG.GAME_TIME === 0) ? 'inline-flex' : 'none';
+        }
+
         var deadline = new Date(Date.parse(new Date()) + BOGGLE_CONFIG.GAME_TIME * 1000);
         initializeClock('clockdiv', deadline);
     };
 
+    var renderMissedWords = function() {
+        var missedContainer = document.getElementById('missed-list');
+        if (!missedContainer) return;
+        missedContainer.innerHTML = '';
+        
+        var solvedWords = solveBoard(boardObj.canvasMatrix, wordsList, getMinWordLength());
+        var missed = solvedWords.filter(function(word) {
+            return goodWords.indexOf(word) === -1;
+        });
+
+        missed.sort(function(a, b) {
+            if (b.length !== a.length) {
+                return b.length - a.length;
+            }
+            return a.localeCompare(b);
+        });
+
+        missed.forEach(function(word) {
+            var liEl = document.createElement('li');
+            var wordText = document.createTextNode(word + ' (' + getPointsForWord(word) + ')');
+            liEl.appendChild(wordText);
+            liEl.setAttribute('title', word.length + ' letters, worth ' + getPointsForWord(word) + ' point(s)');
+            missedContainer.appendChild(liEl);
+        });
+    };
+
     loadAssets().then(function () {
+        loadSettings();
         createBoard();
         bindEvents();
         updateGameStateUI();
