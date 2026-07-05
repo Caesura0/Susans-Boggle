@@ -870,6 +870,41 @@ body.light-theme .modal-header {
     margin-bottom: 1.5rem;
 }
 
+.stats-detailed-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card.mini {
+    padding: 0.5rem 0.25rem;
+}
+
+.stat-card.mini .stat-val {
+    font-size: 1.15rem;
+}
+
+.stat-card.mini .stat-lbl {
+    font-size: 0.65rem;
+}
+
+.count-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+body.light-theme .count-badge {
+    background: rgba(109, 40, 217, 0.1);
+}
+
 .stat-card {
     display: flex;
     flex-direction: column;

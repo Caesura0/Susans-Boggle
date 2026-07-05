@@ -78,12 +78,19 @@ import { initAudio, toggleMute, isMuted, playClick, playChime, playBuzz, playTic
             gamesPlayed: 0,
             totalPoints: 0,
             longestWord: "",
-            highScores: []
+            highScores: [],
+            totalCorrectWords: 0,
+            totalIncorrectWords: 0,
+            totalMissedWords: 0
         };
         var statsStr = window.localStorage.getItem('bogglePlayerStats');
         if (statsStr) {
             try {
-                return JSON.parse(statsStr);
+                var stats = JSON.parse(statsStr);
+                if (stats.totalCorrectWords === undefined) stats.totalCorrectWords = 0;
+                if (stats.totalIncorrectWords === undefined) stats.totalIncorrectWords = 0;
+                if (stats.totalMissedWords === undefined) stats.totalMissedWords = 0;
+                return stats;
             } catch {
                 // Ignore parsing errors and return default stats
                 return defaultStats;
@@ -114,6 +121,17 @@ import { initAudio, toggleMute, isMuted, playClick, playChime, playBuzz, playTic
         });
         stats.longestWord = currentLongest;
 
+        // Update lifetime word counts
+        stats.totalCorrectWords = (stats.totalCorrectWords || 0) + goodWords.length;
+        stats.totalIncorrectWords = (stats.totalIncorrectWords || 0) + badWords.length;
+
+        // Compute missed words
+        var solvedWords = solveBoard(boardObj.canvasMatrix, wordsList, getMinWordLength());
+        var missedCount = solvedWords.filter(function(word) {
+            return goodWords.indexOf(word) === -1;
+        }).length;
+        stats.totalMissedWords = (stats.totalMissedWords || 0) + missedCount;
+
         var dateStr = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: '2-digit' });
         stats.highScores.push({
             score: score,
@@ -138,6 +156,16 @@ import { initAudio, toggleMute, isMuted, playClick, playChime, playBuzz, playTic
         document.getElementById('stats-avg').textContent = avg;
         
         document.getElementById('stats-longest').textContent = stats.longestWord ? stats.longestWord.toUpperCase() : '-';
+
+        // Render detailed word counts
+        var statsCorrectEl = document.getElementById('stats-correct');
+        if (statsCorrectEl) statsCorrectEl.textContent = stats.totalCorrectWords || 0;
+        
+        var statsIncorrectEl = document.getElementById('stats-incorrect');
+        if (statsIncorrectEl) statsIncorrectEl.textContent = stats.totalIncorrectWords || 0;
+        
+        var statsMissedEl = document.getElementById('stats-missed');
+        if (statsMissedEl) statsMissedEl.textContent = stats.totalMissedWords || 0;
 
         var rowsContainer = document.getElementById('leaderboard-rows');
         if (rowsContainer) {
@@ -435,6 +463,10 @@ import { initAudio, toggleMute, isMuted, playClick, playChime, playBuzz, playTic
 
         resetTurn();
 
+        var rc = document.getElementById('right-count');
+        if (rc) rc.textContent = goodWords.length;
+        var wc = document.getElementById('wrong-count');
+        if (wc) wc.textContent = badWords.length;
     };
 
     var validateWord = function () {
@@ -636,7 +668,10 @@ import { initAudio, toggleMute, isMuted, playClick, playChime, playBuzz, playTic
                         gamesPlayed: 0,
                         totalPoints: 0,
                         longestWord: "",
-                        highScores: []
+                        highScores: [],
+                        totalCorrectWords: 0,
+                        totalIncorrectWords: 0,
+                        totalMissedWords: 0
                     };
                     savePlayerStats(defaultStats);
                     renderPlayerStats();
@@ -971,6 +1006,15 @@ import { initAudio, toggleMute, isMuted, playClick, playChime, playBuzz, playTic
         document.getElementById('wrong-list').innerHTML = '';
         var missedContainer = document.getElementById('missed-list');
         if (missedContainer) missedContainer.innerHTML = '';
+        
+        // Reset list count headers
+        var rc = document.getElementById('right-count');
+        if (rc) rc.textContent = '0';
+        var wc = document.getElementById('wrong-count');
+        if (wc) wc.textContent = '0';
+        var mc = document.getElementById('missed-count');
+        if (mc) mc.textContent = '0';
+
         document.getElementById('error-msg').textContent = '';
         state.totalPoints = 0;
         updateScoreDisplay();
@@ -1010,6 +1054,10 @@ import { initAudio, toggleMute, isMuted, playClick, playChime, playBuzz, playTic
             liEl.setAttribute('title', word.length + ' letters, worth ' + getPointsForWord(word) + ' point(s)');
             missedContainer.appendChild(liEl);
         });
+
+        // Update missed count header
+        var mc = document.getElementById('missed-count');
+        if (mc) mc.textContent = missed.length;
     };
 
     loadAssets().then(function () {

@@ -86,19 +86,19 @@
 
             <div class="lists-panel">
                 <div class="word-list-box right-words">
-                    <h3>Correct Words</h3>
+                    <h3>Correct Words <span id="right-count" class="count-badge">0</span></h3>
                     <div class="scroll-container">
                         <ul id="right-list"></ul>
                     </div>
                 </div>
                 <div class="word-list-box wrong-words">
-                    <h3>Incorrect Words</h3>
+                    <h3>Incorrect Words <span id="wrong-count" class="count-badge">0</span></h3>
                     <div class="scroll-container">
                         <ul id="wrong-list"></ul>
                     </div>
                 </div>
                 <div class="word-list-box missed-words">
-                    <h3>Missed Words</h3>
+                    <h3>Missed Words <span id="missed-count" class="count-badge">0</span></h3>
                     <div class="scroll-container">
                         <ul id="missed-list"></ul>
                     </div>
@@ -158,6 +158,22 @@
                     <div class="stat-card">
                         <span class="stat-val" id="stats-longest">-</span>
                         <span class="stat-lbl">Longest Word</span>
+                    </div>
+                </div>
+                
+                <!-- Detailed Stats Grid -->
+                <div class="stats-detailed-grid">
+                    <div class="stat-card mini">
+                        <span class="stat-val" id="stats-correct">0</span>
+                        <span class="stat-lbl">Correct Words</span>
+                    </div>
+                    <div class="stat-card mini">
+                        <span class="stat-val" id="stats-incorrect">0</span>
+                        <span class="stat-lbl">Incorrect Words</span>
+                    </div>
+                    <div class="stat-card mini">
+                        <span class="stat-val" id="stats-missed">0</span>
+                        <span class="stat-lbl">Missed Words</span>
                     </div>
                 </div>
                 
