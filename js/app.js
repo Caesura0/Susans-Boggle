@@ -2,6 +2,7 @@ import { loadGameAssets } from './assets.js';
 import { createGameState, getLetterCount, getPointsForWord as getWordPoints } from './game.js';
 import { Board } from './board.js';
 import { solveBoard } from './solver.js';
+import { initAudio, toggleMute, isMuted, playClick, playChime, playBuzz, playTick, playBuzzer } from './audio.js';
 
 (function () {
     
@@ -28,6 +29,23 @@ import { solveBoard } from './solver.js';
             if (iconEl) iconEl.textContent = '☀️';
             window.localStorage.setItem('boggleTheme', 'light');
         }
+    };
+
+    var initAudioUI = function() {
+        var soundIcon = document.getElementById('sound-icon');
+        if (soundIcon) {
+            soundIcon.textContent = isMuted() ? '🔇' : '🔊';
+        }
+
+        var unlockAudio = function() {
+            initAudio();
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
+            document.removeEventListener('touchstart', unlockAudio);
+        };
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('keydown', unlockAudio);
+        document.addEventListener('touchstart', unlockAudio);
     };
 
     var getMinWordLength = function() {
@@ -143,6 +161,7 @@ import { solveBoard } from './solver.js';
     };
 
     initTheme();
+    initAudioUI();
     
     var BOGGLE_CONFIG = {
         BOARD_WIDTH : 4,
@@ -316,9 +335,8 @@ import { solveBoard } from './solver.js';
             console.log("Valid Click");
             console.log(word);
 
-
             el.classList.add('selected');
-
+            playClick();
         }
 
         //if clicked on same element
@@ -338,6 +356,7 @@ import { solveBoard } from './solver.js';
             if (event.target.classList.contains('selected')) {
                 event.target.classList.toggle('selected');
             }
+            playClick();
         }
         document.getElementById('entered').value = word;
     };
@@ -362,6 +381,7 @@ import { solveBoard } from './solver.js';
         var minLen = getMinWordLength();
         if (word.length < minLen) {
             document.getElementById('error-msg').textContent = 'Word must be at least ' + minLen + ' letters';
+            playBuzz();
             return;
         }
 
@@ -372,6 +392,7 @@ import { solveBoard } from './solver.js';
                 if (goodWords.indexOf(word) > -1) {
                     //word already selected
                     document.getElementById('error-msg').textContent = 'word already added';
+                    playBuzz();
                 } else {
                         // good word
                         goodWords.push(word);
@@ -388,6 +409,7 @@ import { solveBoard } from './solver.js';
                         liEl.setAttribute('title', 'Word is present in the board and in dictionary');
                         liEl.appendChild(wordText);
                         wordsContainer.appendChild(liEl);
+                        playChime();
                 }
             } else {
                 //word found in board but not in dict -- bad word
@@ -397,6 +419,7 @@ import { solveBoard } from './solver.js';
                 liEl.setAttribute('title', 'Word is present in the board but not in dictionary');
                 liEl.appendChild(wordText);
                 wordsContainer.appendChild(liEl);
+                playBuzz();
             }
         } else {
             //Word not found in board -- bad word
@@ -407,6 +430,7 @@ import { solveBoard } from './solver.js';
             liEl.setAttribute('title', 'Word is not present in the board');
             liEl.appendChild(wordText);
             wordsContainer.appendChild(liEl);
+            playBuzz();
         }
 
         resetTurn();
@@ -466,6 +490,17 @@ import { solveBoard } from './solver.js';
         var themeToggleBtn = document.getElementById('theme-toggle');
         if (themeToggleBtn) {
             themeToggleBtn.onclick = toggleTheme;
+        }
+
+        var soundToggleBtn = document.getElementById('sound-toggle');
+        if (soundToggleBtn) {
+            soundToggleBtn.onclick = function() {
+                var muted = toggleMute();
+                var soundIcon = document.getElementById('sound-icon');
+                if (soundIcon) {
+                    soundIcon.textContent = muted ? '🔇' : '🔊';
+                }
+            };
         }
 
         var inputWordBox = document.getElementById("entered");
@@ -563,6 +598,7 @@ import { solveBoard } from './solver.js';
                     updateGameStateUI();
                     renderMissedWords();
                     recordGameStats(state.totalPoints, BOGGLE_CONFIG.BOARD_WIDTH + 'x' + BOGGLE_CONFIG.BOARD_HEIGHT);
+                    playBuzzer();
                 }
             };
         }
@@ -742,6 +778,7 @@ import { solveBoard } from './solver.js';
             visitedArr.push([x, y]);
 
             el.classList.add('selected');
+            playClick();
 
             // update svg polyline
             try {
@@ -890,12 +927,17 @@ import { solveBoard } from './solver.js';
             minutesSpan.innerHTML = ('0' + t.minutes).slice(-2);
             secondsSpan.innerHTML = ('0' + t.seconds).slice(-2);
 
+            if (t.total > 0 && t.total <= 10000) {
+                playTick();
+            }
+
             if (t.total <= 0) {
                 clearInterval(timeinterval);
                 gameOver = true;
                 updateGameStateUI();
                 renderMissedWords();
                 recordGameStats(state.totalPoints, BOGGLE_CONFIG.BOARD_WIDTH + 'x' + BOGGLE_CONFIG.BOARD_HEIGHT);
+                playBuzzer();
             }
         }
 

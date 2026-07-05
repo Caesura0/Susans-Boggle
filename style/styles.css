@@ -796,6 +796,13 @@ body.light-theme .modal-header {
     body {
         padding: 1rem 0.5rem;
     }
+
+    .header-controls {
+        position: static;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        justify-content: center;
+    }
     
     .logo span {
         width: 2.6rem;
