@@ -58,4 +58,14 @@ describe('Board', () => {
         // DOG: D(0,0), O(0,1 or 1,0), G(1,1)
         expect(board.find('dog')).toBe(true);
     });
+
+    it('should find words containing multi-character tiles like Qu', () => {
+        const values = ['Qu', 'E', 'E', 'N', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'];
+        board.initilizeCanvas([...values]);
+
+        expect(board.find('queen')).toBe(true);
+        expect(board.find('que')).toBe(true);
+        expect(board.find('qu')).toBe(true);
+        expect(board.find('q')).toBe(false); // input too short to match Qu tile
+    });
 });

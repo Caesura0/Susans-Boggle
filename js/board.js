@@ -94,7 +94,9 @@ export class Board {
 
         for (let i = 0; i < this.height; i++) {
             for (let j = 0; j < this.width; j++) {
-                if ((inputString[0].toLowerCase() === this.canvasMatrix[i][j].toLowerCase()) || this.canvasMatrix[i][j] === '*') {
+                let cellVal = this.canvasMatrix[i][j].toLowerCase();
+                let startsWithCell = inputString.toLowerCase().startsWith(cellVal);
+                if (startsWithCell || this.canvasMatrix[i][j] === '*') {
                     q.enqueue([i, j, this.canvasMatrix[i][j], [{ i: i, j: j }]]);
                 }
             }
