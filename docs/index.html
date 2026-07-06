@@ -2,68 +2,208 @@
 <html>
 
 <head>
-    <title>Boggle Game</title>
-    <link rel="stylesheet" href="style/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Susan's Boggle</title>
+  <script type="module" crossorigin src="/assets/index-DGsJQ69o.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-s-PlDxCA.css">
 </head>
 
 <body>
-    
-    <section class="right-words-container">
-        <div class="words">
-            <span>Right Words</span>
-            <ul id="right-list">
-            </ul>
+    <header class="game-header">
+        <h1 class="game-title">Susan's</h1>
+        <div class="logo">
+            <span>B</span><span>O</span><span>G</span><span>G</span><span>L</span><span>E</span>
         </div>
-    </section>
+        <p class="subtitle">Word Search Challenge</p>
+        <div class="header-controls">
+            <button id="theme-toggle" class="theme-btn" aria-label="Toggle Theme">
+                <span class="theme-icon">🌙</span>
+            </button>
+            <button id="sound-toggle" class="theme-btn" aria-label="Toggle Sound">
+                <span class="theme-icon" id="sound-icon">🔊</span>
+            </button>
+            <button id="settings-btn" class="theme-btn" aria-label="Open Settings">
+                <span class="theme-icon">⚙️</span>
+            </button>
+            <button id="stats-btn" class="theme-btn" aria-label="Open Statistics">
+                <span class="theme-icon">📊</span>
+            </button>
+        </div>
+    </header>
 
-    <section class="board-container">
-        <div class="clock-container">
-            <div id="clockdiv">
-                <div>
-                    <span class="minutes">00</span>
-                    <div class="smalltext">Minutes</div>
-                </div>
-                <div>
-                    <span class="seconds">00</span>
-                    <div class="smalltext">Seconds</div>
+    <main class="game-layout">
+        <!-- LEFT Pane: Boggle Game Console -->
+        <section class="game-console glass-panel">
+            <div class="clock-container">
+                <div id="clockdiv">
+                    <div class="time-block">
+                        <span class="minutes">00</span>
+                        <div class="smalltext">Min</div>
+                    </div>
+                    <div class="clock-colon">:</div>
+                    <div class="time-block">
+                        <span class="seconds">00</span>
+                        <div class="smalltext">Sec</div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <br>
-        <br>
-        <div class="game-controls">
-            <div class="button-row">
-                <span id='start-game' class='btn-primary'>Start Game</span>
-                <span id='reset-turn' class='btn-secondary'>Reset</span>
-                <span id='random-board' class='btn-secondary'>Random Board</span>
+            
+            <div class="board-wrapper">
+                <div id="board"></div>
+                <div class="board-overlay">
+                    <span id='start-game' class='btn-primary pulse'>Start Game</span>
+                </div>
+            </div>
+            
+            <div class="word-entry">
+                <input id='entered' class="word" type='text' placeholder="Type or swipe tiles...">
+                <span id='add-word' class='btn-primary'>Add Word</span>
+            </div>
+            <div id="error-msg"></div>
+        </section>
+
+        <!-- RIGHT Pane: Stats & Controls Dashboard -->
+        <section class="dashboard glass-panel">
+            <div class="stats-row">
+                <div id='points' class='badge total'>0 Points</div>
+                <div id='high-score' class='badge high-score'>High Score: 0</div>
+            </div>
+
+            <div class="game-controls">
+                <div class="button-row">
+                    <select id="grid-size-select" class="btn-secondary select-control" aria-label="Grid Size">
+                        <option value="4">4x4 Grid</option>
+                        <option value="5">5x5 Grid</option>
+                    </select>
+                    <span id='reset-turn' class='btn-secondary'>Reset</span>
+                    <span id='random-board' class='btn-secondary'>Random Board</span>
+                    <span id='end-game' class='btn-primary' style="display: none; background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);">End Game</span>
+                </div>
                 <label class='toggle-label'>
                     <input id='auto-submit-toggle' type='checkbox'> Auto submit on release
                 </label>
             </div>
-            <div class="score-row">
-                <div id='points' class='total'>0 Point(s)</div>
-                <div id='high-score' class='total'>High Score: 0</div>
+
+            <div class="lists-panel">
+                <div class="word-list-box right-words">
+                    <h3>Correct Words <span id="right-count" class="count-badge">0</span></h3>
+                    <div class="scroll-container">
+                        <ul id="right-list"></ul>
+                    </div>
+                </div>
+                <div class="word-list-box wrong-words">
+                    <h3>Incorrect Words <span id="wrong-count" class="count-badge">0</span></h3>
+                    <div class="scroll-container">
+                        <ul id="wrong-list"></ul>
+                    </div>
+                </div>
+                <div class="word-list-box missed-words">
+                    <h3>Missed Words <span id="missed-count" class="count-badge">0</span></h3>
+                    <div class="scroll-container">
+                        <ul id="missed-list"></ul>
+                    </div>
+                </div>
             </div>
-            <div id="board"></div>
-            <div class="word-entry">
-                <input id='entered' class="word" type='text' placeholder="type and press return...">
-                <span id='add-word' class='btn-primary'>Add Word</span>
+        </section>
+    </main>
+
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>Game Settings</h2>
+                <button id="close-settings" class="close-btn" aria-label="Close Settings">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="game-duration">Game Duration</label>
+                    <select id="game-duration" class="btn-secondary select-control">
+                        <option value="60">60 Seconds (1 Min)</option>
+                        <option value="120">120 Seconds (2 Min)</option>
+                        <option value="180">180 Seconds (3 Min)</option>
+                        <option value="0">Zen Mode (Untimed)</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label for="min-word-len">Minimum Word Length</label>
+                    <select id="min-word-len" class="btn-secondary select-control">
+                        <option value="auto">Auto (3 for 4x4, 4 for 5x5)</option>
+                        <option value="3">3 Letters</option>
+                        <option value="4">4 Letters</option>
+                        <option value="5">5 Letters</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings" class="btn-primary">Apply Settings</button>
+            </div>
+    </div>
+
+    <div id="stats-modal" class="modal-overlay">
+        <div class="modal-content glass-panel stats-modal-content">
+            <div class="modal-header">
+                <h2>Player Stats & Leaderboard</h2>
+                <button id="close-stats" class="close-btn" aria-label="Close Statistics">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Summary Grid -->
+                <div class="stats-summary-grid">
+                    <div class="stat-card">
+                        <span class="stat-val" id="stats-played">0</span>
+                        <span class="stat-lbl">Played</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="stats-avg">0</span>
+                        <span class="stat-lbl">Avg Score</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-val" id="stats-longest">-</span>
+                        <span class="stat-lbl">Longest Word</span>
+                    </div>
+                </div>
+                
+                <!-- Detailed Stats Grid -->
+                <div class="stats-detailed-grid">
+                    <div class="stat-card mini">
+                        <span class="stat-val" id="stats-correct">0</span>
+                        <span class="stat-lbl">Correct Words</span>
+                    </div>
+                    <div class="stat-card mini">
+                        <span class="stat-val" id="stats-incorrect">0</span>
+                        <span class="stat-lbl">Incorrect Words</span>
+                    </div>
+                    <div class="stat-card mini">
+                        <span class="stat-val" id="stats-missed">0</span>
+                        <span class="stat-lbl">Missed Words</span>
+                    </div>
+                </div>
+                
+                <!-- Leaderboard Table -->
+                <div class="leaderboard-section">
+                    <h3>Top 5 High Scores</h3>
+                    <div class="table-container">
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Score</th>
+                                    <th>Grid</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-rows">
+                                <!-- Filled dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer stats-footer">
+                <button id="reset-stats" class="btn-secondary danger-btn">Reset Stats</button>
             </div>
         </div>
-        <div id="error-msg"></div>
-    </section>
+    </div>
 
-    <section class="wrong-words-container">
-        <div class="words">
-            <span>Wrong Words</span>
-            <ul id="wrong-list">
-            </ul>
-        </div>
-    </section>
-
-    <script src="/js/queue.js"></script>
-    <script src="/js/board.js"></script>
-    <script src="/js/app.js"></script>
 </body>
 
 </html>
